@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Buser - Smart City Bus Booking & Live Fleet Tracking</title>
 
   <!-- Tailwind CSS -->
@@ -514,21 +517,28 @@
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
       // Map Provider & Custom API Key State
-      // Line 517 in index.html
-      const [apiKey, setApiKey] = useState(() => {
-        return localStorage.getItem('buser_map_api_key') || 'cb1_5c98_1_e29b42e3a8d35e9d14a2af29';
-      });
       const [tileProvider, setTileProvider] = useState(() => {
-        return localStorage.getItem('buser_tile_provider') || 'carto_voyager';
+        // Enforce OpenStreetMap as the reliable default so no watermark ever appears
+        const saved = localStorage.getItem('buser_tile_provider');
+        return (saved && saved !== 'carto_voyager' && saved !== 'carto_dark') ? saved : 'osm';
+      });
+      const [apiKey, setApiKey] = useState(() => {
+        const savedKey = localStorage.getItem('buser_map_api_key');
+        return (savedKey && savedKey.length > 5 && !savedKey.includes('cb1_5c98')) ? savedKey : '';
       });
       const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
-      const [tempApiKey, setTempApiKey] = useState(() => {
-        return localStorage.getItem('buser_map_api_key') || '';
-      });
-      const [tempProvider, setTempProvider] = useState(() => {
-        return localStorage.getItem('buser_tile_provider') || 'osm';
-      });
+      const [quickKeyInput, setQuickKeyInput] = useState('');
+      const [tempApiKey, setTempApiKey] = useState('');
+      const [tempProvider, setTempProvider] = useState('osm');
       const tileLayerRef = useRef(null);
+
+      // Clean up any stale invalid keys on mount
+      useEffect(() => {
+        const stale = localStorage.getItem('buser_map_api_key');
+        if (stale && stale.includes('cb1_5c98')) {
+          localStorage.removeItem('buser_map_api_key');
+        }
+      }, []);
 
       // Live Tracking Dynamic Simulation State
       const [trackedBusPos, setTrackedBusPos] = useState(null);
@@ -604,18 +614,27 @@
         const cleanKey = (key || '').trim();
         switch (provider) {
           case 'carto_voyager':
+            if (cleanKey && cleanKey.length > 5 && !cleanKey.includes('cb1_5c98')) {
+              return {
+                url: `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`,
+                options: { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; CARTO &copy; OpenStreetMap' }
+              };
+            }
+            // If no valid key is provided, ALWAYS use OpenStreetMap so there is ZERO watermark!
             return {
-              url: cleanKey 
-                ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`
-                : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-              options: { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; CARTO' }
+              url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
             };
           case 'carto_dark':
+            if (cleanKey && cleanKey.length > 5 && !cleanKey.includes('cb1_5c98')) {
+              return {
+                url: `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`,
+                options: { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; CARTO &copy; OpenStreetMap' }
+              };
+            }
             return {
-              url: cleanKey 
-                ? `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`
-                : 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png',
-              options: { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; CARTO' }
+              url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+              options: { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
             };
           case 'esri':
             return {
@@ -623,9 +642,15 @@
               options: { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
             };
           case 'mapbox':
+            if (cleanKey && cleanKey.length > 5) {
+              return {
+                url: `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${encodeURIComponent(cleanKey)}`,
+                options: { maxZoom: 19, tileSize: 512, zoomOffset: -1, attribution: '&copy; Mapbox' }
+              };
+            }
             return {
-              url: `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${encodeURIComponent(cleanKey)}`,
-              options: { maxZoom: 19, tileSize: 512, zoomOffset: -1, attribution: '&copy; Mapbox' }
+              url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
             };
           case 'osm':
           default:
@@ -1161,6 +1186,71 @@
                     <span>Tap any bus marker to inspect & book</span>
                   </div>
                 </div>
+
+                {/* Quick Map & API Key Widget */}
+                <div className="bg-slate-950/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-xl max-w-xs space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                      <span>🗺️</span>
+                      <span>Map Layer</span>
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      apiKey 
+                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' 
+                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    }`}>
+                      {apiKey ? 'CARTO (Key Active)' : 'OpenStreetMap (Free)'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <input 
+                      type="text"
+                      value={quickKeyInput}
+                      onChange={(e) => setQuickKeyInput(e.target.value)}
+                      placeholder={apiKey ? "Update CARTO key..." : "Paste CARTO API key..."}
+                      className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                    />
+                    <button
+                      onClick={() => {
+                        if (quickKeyInput.trim()) {
+                          const k = quickKeyInput.trim();
+                          setApiKey(k);
+                          setTileProvider('carto_voyager');
+                          localStorage.setItem('buser_map_api_key', k);
+                          localStorage.setItem('buser_tile_provider', 'carto_voyager');
+                          setQuickKeyInput('');
+                          alert('API Key saved! CARTO tiles activated.');
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-all shadow"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-800 text-slate-400">
+                    <button
+                      onClick={() => {
+                        setApiKey('');
+                        setTileProvider('osm');
+                        localStorage.removeItem('buser_map_api_key');
+                        localStorage.setItem('buser_tile_provider', 'osm');
+                        setQuickKeyInput('');
+                      }}
+                      className="text-emerald-400 hover:text-emerald-300 font-semibold"
+                    >
+                      ✓ Use Free Map
+                    </button>
+                    <button
+                      onClick={() => setIsMapSettingsOpen(true)}
+                      className="text-blue-400 hover:underline"
+                    >
+                      Settings ⚙️
+                    </button>
+                  </div>
+                </div>
+
               </div>
             )}
           </div>
