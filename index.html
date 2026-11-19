@@ -514,11 +514,12 @@
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
       // Map Provider & Custom API Key State
-      const [tileProvider, setTileProvider] = useState(() => {
-        return localStorage.getItem('buser_tile_provider') || 'osm';
-      });
+      // Line 517 in index.html
       const [apiKey, setApiKey] = useState(() => {
-        return localStorage.getItem('buser_map_api_key') || '';
+        return localStorage.getItem('buser_map_api_key') || 'cb1_5c98_1_e29b42e3a8d35e9d14a2af29';
+      });
+      const [tileProvider, setTileProvider] = useState(() => {
+        return localStorage.getItem('buser_tile_provider') || 'carto_voyager';
       });
       const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
       const [tempApiKey, setTempApiKey] = useState(() => {
