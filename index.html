@@ -64,6 +64,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #0b1120;
+    }
     * {
       font-family: 'Inter', sans-serif;
       -webkit-tap-highlight-color: transparent;
@@ -72,8 +80,13 @@
       font-family: 'Outfit', 'Inter', sans-serif;
     }
     #map {
-      width: 100%;
-      height: 100%;
+      position: absolute !important;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw !important;
+      height: 100vh !important;
       z-index: 1;
     }
     /* Hide Leaflet default zoom controls if we make custom ones */
@@ -96,7 +109,9 @@
       color: #38bdf8 !important;
     }
     .leaflet-container {
-      background-color: #0b1120;
+      width: 100% !important;
+      height: 100% !important;
+      background-color: #0b1120 !important;
     }
 
     /* Custom bus pulse animation on map */
@@ -516,28 +531,26 @@
       const [bookingDetails, setBookingDetails] = useState(null);
       const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-      // Map Provider & Custom API Key State
+      // User's Dedicated CARTO API Key
+      const USER_CARTO_API_KEY = "cb1_5c98_1_e29b42e3a8d35e9d14a2af29";
+
+      // Map Provider & Custom API Key State (Defaulting to CARTO with user's key)
       const [tileProvider, setTileProvider] = useState(() => {
-        // Enforce OpenStreetMap as the reliable default so no watermark ever appears
-        const saved = localStorage.getItem('buser_tile_provider');
-        return (saved && saved !== 'carto_voyager' && saved !== 'carto_dark') ? saved : 'osm';
+        return localStorage.getItem('buser_tile_provider') || 'carto_voyager';
       });
       const [apiKey, setApiKey] = useState(() => {
-        const savedKey = localStorage.getItem('buser_map_api_key');
-        return (savedKey && savedKey.length > 5 && !savedKey.includes('cb1_5c98')) ? savedKey : '';
+        return localStorage.getItem('buser_map_api_key') || USER_CARTO_API_KEY;
       });
       const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
       const [quickKeyInput, setQuickKeyInput] = useState('');
-      const [tempApiKey, setTempApiKey] = useState('');
-      const [tempProvider, setTempProvider] = useState('osm');
+      const [tempApiKey, setTempApiKey] = useState(USER_CARTO_API_KEY);
+      const [tempProvider, setTempProvider] = useState('carto_voyager');
       const tileLayerRef = useRef(null);
 
-      // Clean up any stale invalid keys on mount
+      // Persist the user's CARTO key and provider to localStorage on mount
       useEffect(() => {
-        const stale = localStorage.getItem('buser_map_api_key');
-        if (stale && stale.includes('cb1_5c98')) {
-          localStorage.removeItem('buser_map_api_key');
-        }
+        localStorage.setItem('buser_map_api_key', USER_CARTO_API_KEY);
+        localStorage.setItem('buser_tile_provider', 'carto_voyager');
       }, []);
 
       // Live Tracking Dynamic Simulation State
@@ -611,52 +624,81 @@
 
       // Tile Configuration Resolver
       const getTileConfig = (provider, key) => {
-        const cleanKey = (key || '').trim();
+        const cleanKey = (key || USER_CARTO_API_KEY).trim();
         switch (provider) {
           case 'carto_voyager':
-            if (cleanKey && cleanKey.length > 5 && !cleanKey.includes('cb1_5c98')) {
-              return {
-                url: `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`,
-                options: { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; CARTO &copy; OpenStreetMap' }
-              };
-            }
-            // If no valid key is provided, ALWAYS use OpenStreetMap so there is ZERO watermark!
             return {
-              url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
+              url: `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`,
+              options: {
+                maxZoom: 20,
+                maxNativeZoom: 18,
+                keepBuffer: 12,
+                updateWhenIdle: false,
+                updateWhenZooming: true,
+                subdomains: 'abcd',
+                attribution: '&copy; CARTO &copy; OpenStreetMap'
+              }
             };
           case 'carto_dark':
-            if (cleanKey && cleanKey.length > 5 && !cleanKey.includes('cb1_5c98')) {
-              return {
-                url: `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`,
-                options: { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; CARTO &copy; OpenStreetMap' }
-              };
-            }
             return {
-              url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-              options: { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+              url: `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cleanKey)}`,
+              options: {
+                maxZoom: 20,
+                maxNativeZoom: 18,
+                keepBuffer: 12,
+                updateWhenIdle: false,
+                updateWhenZooming: true,
+                subdomains: 'abcd',
+                attribution: '&copy; CARTO &copy; OpenStreetMap'
+              }
             };
           case 'esri':
             return {
               url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-              options: { maxZoom: 19, attribution: 'Tiles &copy; Esri' }
+              options: {
+                maxZoom: 19,
+                keepBuffer: 12,
+                updateWhenIdle: false,
+                updateWhenZooming: true,
+                attribution: 'Tiles &copy; Esri'
+              }
             };
           case 'mapbox':
             if (cleanKey && cleanKey.length > 5) {
               return {
                 url: `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${encodeURIComponent(cleanKey)}`,
-                options: { maxZoom: 19, tileSize: 512, zoomOffset: -1, attribution: '&copy; Mapbox' }
+                options: {
+                  maxZoom: 19,
+                  tileSize: 512,
+                  zoomOffset: -1,
+                  keepBuffer: 12,
+                  updateWhenIdle: false,
+                  updateWhenZooming: true,
+                  attribution: '&copy; Mapbox'
+                }
               };
             }
             return {
               url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
+              options: {
+                maxZoom: 19,
+                keepBuffer: 12,
+                updateWhenIdle: false,
+                updateWhenZooming: true,
+                attribution: '&copy; OpenStreetMap contributors'
+              }
             };
           case 'osm':
           default:
             return {
               url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              options: { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
+              options: {
+                maxZoom: 19,
+                keepBuffer: 12,
+                updateWhenIdle: false,
+                updateWhenZooming: true,
+                attribution: '&copy; OpenStreetMap contributors'
+              }
             };
         }
       };
@@ -669,6 +711,8 @@
         }
         const config = getTileConfig(provider, key);
         tileLayerRef.current = L.tileLayer(config.url, config.options).addTo(map);
+        // Recalculate dimensions so tiles render across full canvas immediately
+        map.invalidateSize({ debounceMoveEvents: true });
       };
 
       // 2. Initialize Leaflet Map
@@ -680,10 +724,11 @@
           center: [userLocation.lat, userLocation.lng],
           zoom: 14,
           zoomControl: true,
-          attributionControl: false
+          attributionControl: false,
+          trackResize: true
         });
 
-        // Apply initial tile layer (OSM by default, or Carto with API Key)
+        // Apply initial tile layer (CARTO Voyager with User's API Key)
         applyTileLayer(map, tileProvider, apiKey);
 
         // Layers for dynamic markers
@@ -692,7 +737,28 @@
 
         mapInstanceRef.current = map;
 
+        // Critical: Invalidate map size repeatedly to eliminate blank tiles on pan/zoom/resize
+        const triggerInvalidate = () => {
+          if (map) {
+            map.invalidateSize({ debounceMoveEvents: true });
+          }
+        };
+
+        const timer1 = setTimeout(triggerInvalidate, 60);
+        const timer2 = setTimeout(triggerInvalidate, 250);
+        const timer3 = setTimeout(triggerInvalidate, 600);
+        const timer4 = setTimeout(triggerInvalidate, 1200);
+
+        map.on('zoomend moveend resize viewreset', triggerInvalidate);
+        window.addEventListener('resize', triggerInvalidate);
+
         return () => {
+          clearTimeout(timer1);
+          clearTimeout(timer2);
+          clearTimeout(timer3);
+          clearTimeout(timer4);
+          map.off('zoomend moveend resize viewreset', triggerInvalidate);
+          window.removeEventListener('resize', triggerInvalidate);
           map.remove();
           mapInstanceRef.current = null;
         };
@@ -1048,7 +1114,12 @@
       };
 
       return (
-        <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-slate-950">
+        <div className="relative w-screen h-screen overflow-hidden bg-slate-950">
+
+          {/* ======================================================== */}
+          {/* THE LEAFLET MAP CANVAS (Full Bleed Viewport)             */}
+          {/* ======================================================== */}
+          <div id="map" ref={mapRef} className="absolute inset-0 w-full h-full z-0"></div>
 
           {/* ======================================================== */}
           {/* TOP BAR / NAVIGATION HEADER                             */}
@@ -1149,13 +1220,9 @@
           )}
 
           {/* ======================================================== */}
-          {/* THE LEAFLET MAP CANVAS                                   */}
+          {/* FLOATING MAP OVERLAYS & LEGEND                           */}
           {/* ======================================================== */}
-          <div className="w-full h-full relative">
-            <div id="map" ref={mapRef}></div>
-
-            {/* Floating Map Legend & Stats Overlay (When viewing map) */}
-            {appMode === 'MAP_VIEW' && (
+          {appMode === 'MAP_VIEW' && (
               <div className="absolute top-20 left-4 z-10 hidden sm:flex flex-col gap-2">
                 <div className="bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-xl max-w-xs">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Fleet Radar (5km Range)</div>
@@ -1253,7 +1320,6 @@
 
               </div>
             )}
-          </div>
 
           {/* ======================================================== */}
           {/* STEP 1: BUS DETAILS MODAL (Photos, Driver, Ratings, Book) */}

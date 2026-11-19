@@ -21,8 +21,8 @@ As a startup in urban bus management, operating and coordinating multiple bus ro
 ### 1. GPS-Connected 5 km Radar Map & Multi-Provider Tile Engine
 - **Live User Geolocation:** Seamlessly integrates with the HTML5 `navigator.geolocation` API to pinpoint the user's real-time coordinates.
 - **Graceful Fallback:** If location permissions are denied, it centers on a metropolitan downtown transit hub.
-- **Zero-Key Free OpenStreetMap Default:** Automatically loads OpenStreetMap / Esri high-resolution street tiles out of the box with **zero watermark and no API key required**.
-- **Integrated API Key Configuration:** A built-in **"Map & API Key"** settings modal allows you to paste your CARTO API key (or Mapbox token) to unlock premium CARTO Voyager or Dark Matter styles. The app automatically appends `?api_key=YOUR_KEY` to each tile query and persists it in `localStorage`.
+- **Pre-Configured CARTO Voyager API Integration:** Fully pre-configured with the CARTO API key (`cb1_5c98_1_e29b42e3a8d35e9d14a2af29`) as the default basemap, with high-buffer prefetching (`keepBuffer: 12`) and full-viewport dynamic sizing to ensure smooth, continuous tile rendering on zoom and pan with zero blank areas.
+- **Multi-Provider Support:** Easily switch between CARTO Voyager, CARTO Dark, OpenStreetMap, and Esri via the in-app map settings.
 - **5 km Geofencing:** Mathematical filtering using the **Haversine formula** (`calculateDistanceKm`) to display only buses and designated stops within the 5 km operational perimeter.
 - **Visual Radar Boundary:** Styled dashed geodesic perimeter circle highlighting the user's coverage radius.
 
