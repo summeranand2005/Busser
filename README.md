@@ -27,6 +27,7 @@ As a startup in urban bus management, operating and coordinating multiple bus ro
 - **Visual Radar Boundary:** Styled dashed geodesic perimeter circle highlighting the user's coverage radius.
 
 ### 2. Interactive Bus Marker & Pop-up Inspection
+- **High-Visibility Transit Bus Icon:** Custom-styled marker badge featuring a bold, dedicated circular bus icon badge (`🚌`), route designation, distance chip, and road pointer with fixed min-width dimensions to prevent flexbox shrinking on zoom or pan.
 - **Tap Any Bus:** Clicking any bus marker brings up a modal window.
 - **Bus Interior Photo Gallery:**
   - High-definition photography carousel highlighting executive seating, ambient LED lighting, dual climate control, USB-C fast charging ports, and overhead luggage bays.
