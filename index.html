@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -511,11 +511,190 @@
       return { points, trafficSegments };
     }
 
+    // --- Helper: Generate Unique 10-Digit Alphanumeric User ID ---
+    function generate10DigitAlphanumericId() {
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let result = '';
+      for (let i = 0; i < 10; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // Initial Registered Users Master Database (Synchronized with DATABASE.md)
+    const INITIAL_USERS_DB = [
+      {
+        userId: "A7X9K2P4Q1",
+        username: "rohit_sharma",
+        email: "rohit@example.com",
+        password: "password123",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
+        createdAt: "2026-11-20",
+        role: "Verified Commuter"
+      },
+      {
+        userId: "M3B8T5W1Z9",
+        username: "priya_nair",
+        email: "priya@example.com",
+        password: "password123",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
+        createdAt: "2026-11-21",
+        role: "Verified Commuter"
+      },
+      {
+        userId: "K9P2X4M7B1",
+        username: "david_chen",
+        email: "david@example.com",
+        password: "password123",
+        avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80",
+        createdAt: "2026-11-21",
+        role: "Verified Commuter"
+      },
+      {
+        userId: "D4N8W1Q6Z2",
+        username: "ananya_sen",
+        email: "ananya@example.com",
+        password: "password123",
+        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80",
+        createdAt: "2026-11-22",
+        role: "Verified Commuter"
+      },
+      {
+        userId: "H2T7L9C3Y5",
+        username: "marcus_v",
+        email: "marcus@example.com",
+        password: "password123",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+        createdAt: "2026-11-22",
+        role: "Verified Commuter"
+      }
+    ];
+
+    // Initial Tabular Bookings Database Records (Synchronized with DATABASE.md)
+    const INITIAL_BOOKINGS_DB = [
+      {
+        bookingId: "BSR-849201",
+        userId: "A7X9K2P4Q1",
+        busNumber: "101-EXPRESS",
+        busDriver: "Captain Rajesh Sharma",
+        distanceToBus: "2.1 km",
+        distanceToStop: "0.8 km",
+        busStopName: "Central Station Bus Bay A",
+        eta: "6 mins",
+        currentRoad: "Outer Ring Road (Sector 4 Express Corridor)",
+        bookedAt: "2026-11-22 14:15",
+        status: "Completed"
+      },
+      {
+        bookingId: "BSR-612940",
+        userId: "M3B8T5W1Z9",
+        busNumber: "204-AIRPORT",
+        busDriver: "Suresh Patil",
+        distanceToBus: "2.3 km",
+        distanceToStop: "1.1 km",
+        busStopName: "Town Hall Plaza Crossing",
+        eta: "8 mins",
+        currentRoad: "Airport Link Highway (NH-44)",
+        bookedAt: "2026-11-22 15:40",
+        status: "Completed"
+      },
+      {
+        bookingId: "BSR-395172",
+        userId: "K9P2X4M7B1",
+        busNumber: "305-TECHLOOP",
+        busDriver: "Anand R. Verma",
+        distanceToBus: "2.7 km",
+        distanceToStop: "0.6 km",
+        busStopName: "Tech Park South Campus",
+        eta: "7 mins",
+        currentRoad: "Cyberlink Tech Corridor",
+        bookedAt: "2026-11-22 16:02",
+        status: "Completed"
+      },
+      {
+        bookingId: "BSR-721483",
+        userId: "D4N8W1Q6Z2",
+        busNumber: "412-RINGROAD",
+        busDriver: "Pooja Krishnan",
+        distanceToBus: "2.6 km",
+        distanceToStop: "0.9 km",
+        busStopName: "Metro Terminal West Gate",
+        eta: "6 mins",
+        currentRoad: "Kengeri Satellite Link Road",
+        bookedAt: "2026-11-22 16:18",
+        status: "Completed"
+      },
+      {
+        bookingId: "BSR-550391",
+        userId: "H2T7L9C3Y5",
+        busNumber: "520-CENTRAL",
+        busDriver: "Mohammad Tariq",
+        distanceToBus: "3.1 km",
+        distanceToStop: "1.4 km",
+        busStopName: "Victoria Hospital Junction",
+        eta: "10 mins",
+        currentRoad: "Grand Central Boulevard",
+        bookedAt: "2026-11-22 16:22",
+        status: "Active"
+      }
+    ];
+
     // --- Main React Component ---
     function BuserApp() {
       // Application Flow States:
       // 'MAP_VIEW' -> 'BUS_DETAILS_MODAL' -> 'STOP_SELECTION' -> 'CONFIRMATION_MODAL' -> 'LIVE_TRACKING'
       const [appMode, setAppMode] = useState('MAP_VIEW');
+
+      // Database State (Tabular Bookings & Registered Users Master)
+      const [usersDb, setUsersDb] = useState(() => {
+        try {
+          const saved = localStorage.getItem('buser_users_db');
+          return saved ? JSON.parse(saved) : INITIAL_USERS_DB;
+        } catch(e) {
+          return INITIAL_USERS_DB;
+        }
+      });
+
+      const [bookingsDb, setBookingsDb] = useState(() => {
+        try {
+          const saved = localStorage.getItem('buser_bookings_db');
+          return saved ? JSON.parse(saved) : INITIAL_BOOKINGS_DB;
+        } catch(e) {
+          return INITIAL_BOOKINGS_DB;
+        }
+      });
+
+      // Authentication State
+      const [currentUser, setCurrentUser] = useState(() => {
+        try {
+          const saved = localStorage.getItem('buser_current_user');
+          return saved ? JSON.parse(saved) : null;
+        } catch(e) {
+          return null;
+        }
+      });
+
+      // Auth Pop-up States: null | 'SIGN_UP' | 'LOG_IN'
+      const [authModalMode, setAuthModalMode] = useState(null);
+      const [authError, setAuthError] = useState('');
+      
+      // Sign Up Form (3 boxes: Username, Email ID, Password)
+      const [signUpForm, setSignUpForm] = useState({
+        username: '',
+        email: '',
+        password: ''
+      });
+
+      // Log In Form (2 boxes: Email ID / Username / User ID, Password)
+      const [logInForm, setLogInForm] = useState({
+        identifier: '',
+        password: ''
+      });
+
+      // Database Inspector Modal State
+      const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
+      const [dbActiveTab, setDbActiveTab] = useState('bookings'); // 'bookings' | 'users' | 'markdown'
+      const [copyNotification, setCopyNotification] = useState('');
       
       // Geolocation and Data State
       const [userLocation, setUserLocation] = useState(DEFAULT_USER_LOCATION);
@@ -910,12 +1089,187 @@
 
       }, [nearestBuses, nearestStops, selectedBus, selectedStop, appMode, searchRadiusKm, userLocation]);
 
+      // --- Authentication & Database Handlers ---
+
+      // A. Handle Sign Up (3 boxes: Username, Email ID, Password)
+      const handleSignUp = (e) => {
+        if (e) e.preventDefault();
+        setAuthError('');
+        const username = signUpForm.username.trim();
+        const email = signUpForm.email.trim();
+        const password = signUpForm.password;
+
+        if (!username) {
+          setAuthError('Please enter a username.');
+          return;
+        }
+        if (!email || !email.includes('@')) {
+          setAuthError('Please enter a valid email address.');
+          return;
+        }
+        if (!password || password.length < 4) {
+          setAuthError('Password must be at least 4 characters.');
+          return;
+        }
+
+        // Check uniqueness
+        const duplicate = usersDb.find(u => 
+          u.username.toLowerCase() === username.toLowerCase() || 
+          u.email.toLowerCase() === email.toLowerCase()
+        );
+        if (duplicate) {
+          setAuthError('An account with this username or email already exists. Please log in.');
+          return;
+        }
+
+        // Generate unique 10-digit alphanumeric user ID
+        const newUserId = generate10DigitAlphanumericId();
+        const now = new Date().toISOString().split('T')[0];
+
+        const newUser = {
+          userId: newUserId,
+          username: username,
+          email: email,
+          password: password,
+          avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80`,
+          createdAt: now,
+          role: "Verified Commuter"
+        };
+
+        const updatedUsers = [newUser, ...usersDb];
+        setUsersDb(updatedUsers);
+        localStorage.setItem('buser_users_db', JSON.stringify(updatedUsers));
+        
+        setCurrentUser(newUser);
+        localStorage.setItem('buser_current_user', JSON.stringify(newUser));
+
+        setSignUpForm({ username: '', email: '', password: '' });
+        setAuthModalMode(null);
+        playSuccessChime();
+
+        // "store the above mentioned detailes about the user in a seperate database in a tabular format,
+        // and put the user back into the bus booking pop-up."
+        if (selectedBus) {
+          setAppMode('BUS_DETAILS_MODAL');
+        }
+      };
+
+      // B. Handle Log In (2 boxes: Email ID / Username / User ID, Password)
+      const handleLogIn = (e) => {
+        if (e) e.preventDefault();
+        setAuthError('');
+        const idInput = logInForm.identifier.trim();
+        const password = logInForm.password;
+
+        if (!idInput) {
+          setAuthError('Please enter your Email, Username, or 10-Digit User ID.');
+          return;
+        }
+        if (!password) {
+          setAuthError('Please enter your account password.');
+          return;
+        }
+
+        // Verify credentials against database
+        const match = usersDb.find(u => 
+          (u.email.toLowerCase() === idInput.toLowerCase() ||
+           u.username.toLowerCase() === idInput.toLowerCase() ||
+           u.userId.toUpperCase() === idInput.toUpperCase()) &&
+          u.password === password
+        );
+
+        if (match) {
+          setCurrentUser(match);
+          localStorage.setItem('buser_current_user', JSON.stringify(match));
+          setLogInForm({ identifier: '', password: '' });
+          setAuthModalMode(null);
+          playSuccessChime();
+
+          // "if its ture, the user is considered signed in and they are put back into the bus booking pop-up."
+          if (selectedBus) {
+            setAppMode('BUS_DETAILS_MODAL');
+          }
+        } else {
+          // "if not, the user is asked to re-enter their details."
+          setAuthError('Invalid credentials entered. Please check your username/email/ID and password, then re-enter.');
+        }
+      };
+
+      // C. Handle Sign Out
+      const handleSignOut = () => {
+        setCurrentUser(null);
+        localStorage.removeItem('buser_current_user');
+        setAuthModalMode('LOG_IN');
+      };
+
+      // D. Generate GitHub-Compatible Markdown Database Table Representation
+      const generateMarkdownDatabaseText = () => {
+        let md = `# 🗄️ Buser Fleet Management - Passenger Bookings Database\n\n`;
+        md += `> **Confidential Transit Logs • Tabular Passenger Records**  \n`;
+        md += `> This file serves as the external database for passenger trip reservations, real-time telematic distances, and active street corridors across the city transit grid. Viewable natively as a table on the GitHub website.\n\n---\n\n`;
+        md += `### 📋 Live Bookings Database Table\n\n`;
+        md += `| Booking ID | Unique User ID (10-Digit Alphanumeric) | Bus Number | Bus Driver | Distance (User to Bus) | Distance (User to Bus Stop) | Picked Bus Stop Name | Estimated Time of Arrival (ETA) | Current Route (Road Name) | Booked At | Status |\n`;
+        md += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+
+        bookingsDb.forEach(b => {
+          md += `| \`${b.bookingId}\` | **\`${b.userId}\`** | ${b.busNumber} | ${b.busDriver} | ${b.distanceToBus} | ${b.distanceToStop} | ${b.busStopName} | ${b.eta} | ${b.currentRoad} | ${b.bookedAt} | ${b.status} |\n`;
+        });
+
+        md += `\n---\n\n### 👥 Registered Users Master Database\n\n`;
+        md += `| Unique User ID (10-Digit Alphanumeric) | Username | Registered Email | Account Created | Security Role |\n`;
+        md += `| :--- | :--- | :--- | :--- | :--- |\n`;
+
+        usersDb.forEach(u => {
+          md += `| **\`${u.userId}\`** | \`${u.username}\` | \`${u.email}\` | ${u.createdAt} | ${u.role || 'Verified Commuter'} |\n`;
+        });
+
+        md += `\n---\n\n### 🔍 Database Schema Specifications\n\n`;
+        md += `1. **\`Unique User ID\`**: 10-character alphanumeric unique identifier (e.g. \`A7X9K2P4Q1\`). Datatype: \`VARCHAR(10)\` / \`Alphanumeric\`.\n`;
+        md += `2. **\`Bus Number\`**: Designation and corridor code of the booked transit vehicle (e.g. \`101-EXPRESS\`, \`204-AIRPORT\`).\n`;
+        md += `3. **\`Bus Driver\`**: Full name of the assigned certified captain.\n`;
+        md += `4. **\`Distance (User to Bus)\`**: Geodesic distance in kilometers from customer's GPS position to the bus.\n`;
+        md += `5. **\`Distance (User to Bus Stop)\`**: Geodesic distance in kilometers from customer's GPS position to the selected pickup stop.\n`;
+        md += `6. **\`Picked Bus Stop Name\`**: Official name of the designated transit shelter chosen by the customer.\n`;
+        md += `7. **\`Estimated Time of Arrival (ETA)\`**: Computed wait time for bus arrival at the chosen stop.\n`;
+        md += `8. **\`Current Route (Road Name)\`**: Specific urban arterial road, avenue, or highway through which the vehicle is traveling.\n`;
+
+        return md;
+      };
+
+      const copyMarkdownToClipboard = () => {
+        const mdText = generateMarkdownDatabaseText();
+        navigator.clipboard.writeText(mdText).then(() => {
+          setCopyNotification('Copied DATABASE.md to clipboard!');
+          setTimeout(() => setCopyNotification(''), 3000);
+        });
+      };
+
+      const downloadMarkdownFile = () => {
+        const mdText = generateMarkdownDatabaseText();
+        const blob = new Blob([mdText], { type: 'text/markdown;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'DATABASE.md');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
       // 4. Handle "Book this bus" click inside Bus Info Pop-up
       const handleBookBusClick = () => {
-        // As per user specification:
-        // "after scrolling down on the pop-up the user has an option to book that bus.
-        // clicking that button will close the pop up and highlight the nearest bus stops,
-        // letting them click on the one they want the bus to arrive at."
+        // As per specification:
+        // "i also want you to add a pop up when a new user tries to book a bus.
+        // this pop-up will contain 3 boxes where the user can set up an account on the app itself...
+        // below all these boxes is an option to sign up and below that one is an option to log in...
+        // and put the user back into the bus booking pop-up."
+        if (!currentUser) {
+          setAuthError('Please sign up or log in to complete your bus booking reservation.');
+          setAuthModalMode('SIGN_UP');
+          return;
+        }
+
+        // If user is authenticated, proceed to highlight stops
         setAppMode('STOP_SELECTION');
         
         // Pan/fit map nicely to show nearest stops
@@ -929,17 +1283,37 @@
         }
       };
 
-      // 5. Handle Stop Selection -> Opens Confirmation Modal with Tick Mark
+      // 5. Handle Stop Selection -> Opens Confirmation Modal with Tick Mark & Records to Database
       const handleStopSelected = (chosenStop) => {
-        // Save booking details
+        const currentUserId = currentUser ? currentUser.userId : "GUEST-USER";
+        const etaMinutes = Math.max(3, Math.round(chosenStop.distanceKm * 4 + 2));
+        const newBookingId = "BSR-" + Math.floor(100000 + Math.random() * 900000);
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0] + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+        // Build complete tabular database record
         const booking = {
-          bookingId: "BSR-" + Math.floor(100000 + Math.random() * 900000),
+          bookingId: newBookingId,
+          userId: currentUserId, // 10-Digit Alphanumeric User ID
+          busNumber: selectedBus.routeNumber,
+          busDriver: selectedBus.driver.name,
+          distanceToBus: `${selectedBus.distanceKm.toFixed(1)} km`,
+          distanceToStop: `${chosenStop.distanceKm.toFixed(1)} km`,
+          busStopName: chosenStop.name,
+          eta: `${etaMinutes} mins`,
+          currentRoad: selectedBus.currentRoadName || "Metro Arterial Corridor",
+          bookedAt: dateStr,
+          status: 'Active',
           bus: selectedBus,
           stop: chosenStop,
-          bookedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          etaMinutes: Math.max(3, Math.round(chosenStop.distanceKm * 4 + 2)),
           otp: Math.floor(1000 + Math.random() * 9000)
         };
+
+        // Append to Database
+        const updatedBookings = [booking, ...bookingsDb];
+        setBookingsDb(updatedBookings);
+        localStorage.setItem('buser_bookings_db', JSON.stringify(updatedBookings));
+
         setBookingDetails(booking);
         playSuccessChime();
         setAppMode('CONFIRMATION_MODAL');
@@ -1199,6 +1573,78 @@
                   </span>
                 )}
               </button>
+
+              {/* Database Table Button */}
+              <button
+                onClick={() => setIsDatabaseModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 hover:border-blue-500/50 transition-all shadow-md"
+                title="View GitHub-Synced Tabular Transit Database"
+              >
+                <span className="text-blue-400">🗄️</span>
+                <span className="hidden md:inline">Database</span>
+              </button>
+
+              {/* Top-Right Profile & Authentication Area */}
+              {currentUser ? (
+                /* WHEN SIGNED IN: Profile picture, username next to it, and "signed in" in small text below */
+                <div 
+                  onClick={() => {
+                    setAuthError('');
+                    setAuthModalMode('LOG_IN');
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 transition-all cursor-pointer shadow-md group"
+                  title="Click your username to view account / sign in pop-up"
+                >
+                  <div className="relative shrink-0">
+                    <img 
+                      src={currentUser.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} 
+                      alt={currentUser.username} 
+                      className="w-8 h-8 rounded-full object-cover border-2 border-emerald-400 shadow group-hover:scale-105 transition-transform"
+                    />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full"></span>
+                  </div>
+                  <div className="text-left flex flex-col justify-center">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors leading-tight">
+                        {currentUser.username}
+                      </span>
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">
+                        {currentUser.userId}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-medium leading-tight flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                      signed in
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                /* WHEN NOT SIGNED IN: Blank profile picture, user id, and "sign up here" in small text below */
+                <div 
+                  onClick={() => {
+                    setAuthError('');
+                    setAuthModalMode('SIGN_UP');
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/60 transition-all cursor-pointer shadow-md group"
+                  title="Click to sign up and get your unique 10-digit User ID"
+                >
+                  {/* Blank profile picture silhouette */}
+                  <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-dashed border-slate-500 flex items-center justify-center text-slate-400 group-hover:border-blue-400 group-hover:text-blue-400 transition-colors shrink-0">
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left flex flex-col justify-center">
+                    <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors leading-tight">
+                      ID: GUEST-USER
+                    </span>
+                    <span className="text-[10px] text-blue-400 font-semibold leading-tight flex items-center gap-1">
+                      <span>👉</span>
+                      sign up here
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </header>
 
@@ -1521,6 +1967,17 @@
                     </div>
                   </div>
 
+                  {/* Current Active Road Corridor */}
+                  <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+                    <div className="text-xs text-slate-400 flex items-center gap-2">
+                      <span className="text-blue-400">🛣️</span>
+                      <span className="font-semibold text-slate-300">Active Road Corridor:</span>
+                    </div>
+                    <div className="text-xs font-bold text-amber-400 font-mono text-right">
+                      {selectedBus.currentRoadName}
+                    </div>
+                  </div>
+
                 </div>
 
                 {/* MODAL FOOTER: "Book this bus" Button (Scrolled to bottom) */}
@@ -1605,15 +2062,26 @@
                     </div>
                   </div>
 
+                  {/* Active Road Route Corridor */}
+                  <div className="flex items-start gap-2.5 pt-1.5 border-t border-slate-800/80">
+                    <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                      🛣️
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[10px] text-slate-500 uppercase font-bold">Current Route (Road Name)</div>
+                      <div className="text-xs font-bold text-amber-400 font-mono">{bookingDetails.currentRoad}</div>
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
                     <div>
                       <span className="text-slate-400">Driver: </span>
                       <span className="font-semibold text-white">{bookingDetails.bus.driver.name}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400">Boarding OTP: </span>
-                      <span className="font-mono font-bold text-amber-400 tracking-wider px-1.5 py-0.5 bg-amber-400/10 rounded">
-                        {bookingDetails.otp}
+                      <span className="text-slate-400">User ID: </span>
+                      <span className="font-mono font-bold text-blue-400 tracking-wider px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/30 rounded">
+                        {bookingDetails.userId}
                       </span>
                     </div>
                   </div>
@@ -1722,6 +2190,17 @@
                       <span>Bus Departed</span>
                       <span className="text-amber-400 font-bold">Stop: {bookingDetails.stop.name.split(' ')[0]}...</span>
                       <span>Arrived</span>
+                    </div>
+                  </div>
+
+                  {/* Active Road Corridor Being Traveled */}
+                  <div className="flex items-center justify-between text-xs px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <span>🛣️</span>
+                      <span className="font-semibold text-slate-300">Active Road:</span>
+                    </div>
+                    <div className="font-bold text-amber-400 font-mono text-right truncate max-w-[220px] sm:max-w-none">
+                      {bookingDetails.currentRoad}
                     </div>
                   </div>
 
@@ -1977,6 +2456,536 @@
                       <path d="M5 12h14" />
                       <path d="m12 5 7 7-7 7" />
                     </svg>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* STEP 4: SIGN UP POP-UP (3 Boxes: Username, Email, Pass) */}
+          {/* ======================================================== */}
+          {authModalMode === 'SIGN_UP' && (
+            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+              <div 
+                className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-lg shadow-inner">
+                      👤
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-white font-heading">Passenger Sign Up</h3>
+                      <p className="text-xs text-slate-400">Set up your account & get your 10-digit ID</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setAuthModalMode(null);
+                      setAuthError('');
+                    }}
+                    className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Feedback or Error Prompt */}
+                {authError && (
+                  <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                    <svg className="w-4 h-4 shrink-0 fill-current text-rose-400" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                    </svg>
+                    <span>{authError}</span>
+                  </div>
+                )}
+
+                {/* 3 Input Boxes as explicitly requested */}
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  {/* Box 1: Username */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                      <span>1. Username</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Profile identifier</span>
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        required
+                        value={signUpForm.username}
+                        onChange={(e) => setSignUpForm({...signUpForm, username: e.target.value})}
+                        placeholder="e.g. rohit_sharma"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Box 2: Email ID */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                      <span>2. Email ID</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Trip confirmations</span>
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type="email"
+                        required
+                        value={signUpForm.email}
+                        onChange={(e) => setSignUpForm({...signUpForm, email: e.target.value})}
+                        placeholder="e.g. rohit@example.com"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Box 3: Password */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                      <span>3. Password</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Account security</span>
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type="password"
+                        required
+                        value={signUpForm.password}
+                        onChange={(e) => setSignUpForm({...signUpForm, password: e.target.value})}
+                        placeholder="Create your account password"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Explanatory Database & ID Note */}
+                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-slate-300 flex items-start gap-2.5">
+                    <span className="text-blue-400 font-bold text-sm shrink-0 mt-0.5">🆔</span>
+                    <span>Clicking Sign Up automatically generates a unique <b>10-digit alphanumeric User ID</b> and stores your profile in the tabular database.</span>
+                  </div>
+
+                  {/* Option to Sign Up (Below all 3 boxes) */}
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-blue-600/30 transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <span>Sign Up & Reserve Bus</span>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </button>
+                </form>
+
+                {/* Option to Log In (Below the Sign Up button) */}
+                <div className="pt-2 text-center border-t border-slate-800">
+                  <p className="text-xs text-slate-400">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthError('');
+                        setAuthModalMode('LOG_IN');
+                      }}
+                      className="text-blue-400 hover:text-blue-300 font-bold underline ml-1"
+                    >
+                      Log In here →
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* STEP 5: LOG IN POP-UP (2 Boxes: Identifier, Password)    */}
+          {/* ======================================================== */}
+          {authModalMode === 'LOG_IN' && (
+            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+              <div 
+                className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-lg shadow-inner">
+                      🔐
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-white font-heading">Log In to Buser</h3>
+                      <p className="text-xs text-slate-400">Enter your credentials to continue booking</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setAuthModalMode(null);
+                      setAuthError('');
+                    }}
+                    className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Re-enter Details Alert if failed */}
+                {authError && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-2.5">
+                    <svg className="w-4 h-4 shrink-0 fill-current text-rose-400 mt-0.5" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                    </svg>
+                    <div>
+                      <span className="font-bold text-rose-200">Credentials Mismatch: </span>
+                      <span>{authError}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2 Input Boxes as explicitly requested */}
+                <form onSubmit={handleLogIn} className="space-y-4">
+                  {/* Box 1: Email ID / Username / User ID */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                      <span>1. Email ID / Username / User ID</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Enter any of the three</span>
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        required
+                        value={logInForm.identifier}
+                        onChange={(e) => setLogInForm({...logInForm, identifier: e.target.value})}
+                        placeholder="e.g. rohit@example.com or A7X9K2P4Q1"
+                        className={`w-full bg-slate-950 border rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 transition-colors ${
+                          authError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Box 2: Password */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                      <span>2. Password</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Account password</span>
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type="password"
+                        required
+                        value={logInForm.password}
+                        onChange={(e) => setLogInForm({...logInForm, password: e.target.value})}
+                        placeholder="Enter your account password"
+                        className={`w-full bg-slate-950 border rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 transition-colors ${
+                          authError ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Log In Button */}
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-emerald-600/30 transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <span>Log In & Return to Bus</span>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </button>
+                </form>
+
+                {/* Pre-populated Demo Account Helper */}
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 space-y-1.5">
+                  <div className="text-slate-300 font-bold flex items-center justify-between">
+                    <span>💡 Quick Demo Test Account:</span>
+                    <button
+                      type="button"
+                      onClick={() => setLogInForm({ identifier: 'A7X9K2P4Q1', password: 'password123' })}
+                      className="text-xs text-blue-400 hover:underline font-semibold"
+                    >
+                      Autofill Test User
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-[10px] font-mono text-slate-300">
+                    <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ID: <b className="text-emerald-400">A7X9K2P4Q1</b></span>
+                    <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Pass: <b className="text-amber-400">password123</b></span>
+                  </div>
+                </div>
+
+                {/* Option to Switch to Sign Up */}
+                <div className="pt-2 text-center border-t border-slate-800 flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Don't have an account yet?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthError('');
+                      setAuthModalMode('SIGN_UP');
+                    }}
+                    className="text-blue-400 hover:text-blue-300 font-bold underline"
+                  >
+                    Sign Up here →
+                  </button>
+                </div>
+
+                {currentUser && (
+                  <div className="pt-1 text-center">
+                    <button
+                      onClick={handleSignOut}
+                      className="text-[11px] text-rose-400 hover:underline"
+                    >
+                      Sign Out from {currentUser.username} ({currentUser.userId})
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* STEP 6: EXTERNAL TABULAR DATABASE INSPECTOR MODAL        */}
+          {/* ======================================================== */}
+          {isDatabaseModalOpen && (
+            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+              <div 
+                className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="px-6 py-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between sticky top-0 z-20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-lg">
+                      🗄️
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-extrabold text-white">Buser Fleet Database</h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                          DATABASE.md Synced
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">External tabular database viewable natively on GitHub</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={copyMarkdownToClipboard}
+                      className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors shadow"
+                      title="Copy Markdown Table for GitHub"
+                    >
+                      <svg className="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                      </svg>
+                      <span>Copy Markdown</span>
+                    </button>
+
+                    <button
+                      onClick={downloadMarkdownFile}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors shadow"
+                      title="Download updated DATABASE.md file"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" x2="12" y1="15" y2="3"/>
+                      </svg>
+                      <span>Download DATABASE.md</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setIsDatabaseModalOpen(false)}
+                      className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors ml-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sub-Header Tabs & Quick Feedback */}
+                <div className="px-6 py-2.5 bg-slate-950/70 border-b border-slate-800 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setDbActiveTab('bookings')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                        dbActiveTab === 'bookings'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
+                      }`}
+                    >
+                      📋 Bookings Table ({bookingsDb.length})
+                    </button>
+
+                    <button
+                      onClick={() => setDbActiveTab('users')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                        dbActiveTab === 'users'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
+                      }`}
+                    >
+                      👥 Users Master ({usersDb.length})
+                    </button>
+
+                    <button
+                      onClick={() => setDbActiveTab('markdown')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                        dbActiveTab === 'markdown'
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
+                      }`}
+                    >
+                      📄 GitHub Markdown Raw
+                    </button>
+                  </div>
+
+                  {copyNotification && (
+                    <span className="text-emerald-400 font-bold animate-fade-in flex items-center gap-1">
+                      <span>✓</span> {copyNotification}
+                    </span>
+                  )}
+                </div>
+
+                {/* Tabular Database Content */}
+                <div className="p-6 overflow-y-auto flex-1">
+                  
+                  {/* TAB 1: BOOKINGS TABULAR DATABASE */}
+                  {dbActiveTab === 'bookings' && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>All passenger bus bookings stored with 10-digit User ID and corridor road names:</span>
+                        <span className="font-mono text-emerald-400">{bookingsDb.length} Total Records</span>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-2xl border border-slate-800 shadow-inner">
+                        <table className="w-full text-left text-xs text-slate-300 divide-y divide-slate-800">
+                          <thead className="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] tracking-wider">
+                            <tr>
+                              <th className="px-3.5 py-3 font-bold">Booking ID</th>
+                              <th className="px-3.5 py-3 font-bold text-blue-400">Unique User ID</th>
+                              <th className="px-3.5 py-3 font-bold">Bus No.</th>
+                              <th className="px-3.5 py-3 font-bold">Driver</th>
+                              <th className="px-3.5 py-3 font-bold">User → Bus</th>
+                              <th className="px-3.5 py-3 font-bold">User → Stop</th>
+                              <th className="px-3.5 py-3 font-bold">Picked Bus Stop</th>
+                              <th className="px-3.5 py-3 font-bold text-amber-400">ETA</th>
+                              <th className="px-3.5 py-3 font-bold text-emerald-400">Current Route (Road Name)</th>
+                              <th className="px-3.5 py-3 font-bold">Booked At</th>
+                              <th className="px-3.5 py-3 font-bold">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60 bg-slate-900/60 font-sans">
+                            {bookingsDb.map((rec, i) => (
+                              <tr key={i} className="hover:bg-slate-800/40 transition-colors">
+                                <td className="px-3.5 py-3 font-mono font-bold text-white whitespace-nowrap">{rec.bookingId}</td>
+                                <td className="px-3.5 py-3 font-mono font-bold text-blue-400 whitespace-nowrap bg-blue-500/5">
+                                  {rec.userId}
+                                </td>
+                                <td className="px-3.5 py-3 whitespace-nowrap font-semibold">{rec.busNumber}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap">{rec.busDriver}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap">{rec.distanceToBus}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap">{rec.distanceToStop}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap font-medium text-slate-200">{rec.busStopName}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap font-bold text-amber-400">{rec.eta}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap font-mono text-emerald-300">{rec.currentRoad}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap text-slate-400 text-[11px]">{rec.bookedAt}</td>
+                                <td className="px-3.5 py-3 whitespace-nowrap">
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                    rec.status === 'Active' 
+                                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                                      : 'bg-slate-800 text-slate-400'
+                                  }`}>
+                                    {rec.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: USERS MASTER TABULAR DATABASE */}
+                  {dbActiveTab === 'users' && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>Master directory of registered commuters with 10-digit alphanumeric User IDs:</span>
+                        <span className="font-mono text-blue-400">{usersDb.length} Registered Accounts</span>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-2xl border border-slate-800 shadow-inner">
+                        <table className="w-full text-left text-xs text-slate-300 divide-y divide-slate-800">
+                          <thead className="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] tracking-wider">
+                            <tr>
+                              <th className="px-4 py-3 font-bold text-blue-400">Unique User ID (10-Digit Alphanumeric)</th>
+                              <th className="px-4 py-3 font-bold">Username</th>
+                              <th className="px-4 py-3 font-bold">Registered Email</th>
+                              <th className="px-4 py-3 font-bold">Created Date</th>
+                              <th className="px-4 py-3 font-bold">Security Role</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60 bg-slate-900/60">
+                            {usersDb.map((u, i) => (
+                              <tr key={i} className="hover:bg-slate-800/40 transition-colors">
+                                <td className="px-4 py-3 font-mono font-black text-blue-400 whitespace-nowrap bg-blue-500/5">
+                                  {u.userId}
+                                </td>
+                                <td className="px-4 py-3 font-bold text-white whitespace-nowrap flex items-center gap-2">
+                                  <img src={u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"} className="w-5 h-5 rounded-full object-cover" />
+                                  <span>{u.username}</span>
+                                </td>
+                                <td className="px-4 py-3 font-mono text-slate-300 whitespace-nowrap">{u.email}</td>
+                                <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{u.createdAt}</td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                    {u.role || 'Verified Commuter'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: GITHUB MARKDOWN RAW VIEW */}
+                  {dbActiveTab === 'markdown' && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>Native GitHub Markdown format as written to <code className="text-blue-400 bg-slate-950 px-1 py-0.5 rounded">DATABASE.md</code>:</span>
+                        <button
+                          onClick={copyMarkdownToClipboard}
+                          className="text-xs text-blue-400 hover:underline font-bold"
+                        >
+                          Copy All
+                        </button>
+                      </div>
+
+                      <pre className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-[11px] overflow-x-auto max-h-[50vh] leading-relaxed select-all">
+                        {generateMarkdownDatabaseText()}
+                      </pre>
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Modal Footer */}
+                <div className="px-6 py-3.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>Database connected & responsive</span>
+                  </div>
+                  <button
+                    onClick={() => setIsDatabaseModalOpen(false)}
+                    className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-colors"
+                  >
+                    Done
                   </button>
                 </div>
 

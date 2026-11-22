@@ -1,0 +1,108 @@
+{
+  "tableName": "passenger_bus_bookings",
+  "lastSynced": "2026-11-22T16:25:00Z",
+  "records": [
+    {
+      "bookingId": "BSR-849201",
+      "userId": "A7X9K2P4Q1",
+      "busNumber": "101-EXPRESS",
+      "busDriver": "Captain Rajesh Sharma",
+      "distanceToBus": "2.1 km",
+      "distanceToStop": "0.8 km",
+      "busStopName": "Central Station Bus Bay A",
+      "eta": "6 mins",
+      "currentRoad": "Outer Ring Road (Sector 4 Express Corridor)",
+      "bookedAt": "2026-11-22 14:15",
+      "status": "Completed"
+    },
+    {
+      "bookingId": "BSR-612940",
+      "userId": "M3B8T5W1Z9",
+      "busNumber": "204-AIRPORT",
+      "busDriver": "Suresh Patil",
+      "distanceToBus": "2.3 km",
+      "distanceToStop": "1.1 km",
+      "busStopName": "Town Hall Plaza Crossing",
+      "eta": "8 mins",
+      "currentRoad": "Airport Link Highway (NH-44)",
+      "bookedAt": "2026-11-22 15:40",
+      "status": "Completed"
+    },
+    {
+      "bookingId": "BSR-395172",
+      "userId": "K9P2X4M7B1",
+      "busNumber": "305-TECHLOOP",
+      "busDriver": "Anand R. Verma",
+      "distanceToBus": "2.7 km",
+      "distanceToStop": "0.6 km",
+      "busStopName": "Tech Park South Campus",
+      "eta": "7 mins",
+      "currentRoad": "Cyberlink Tech Corridor",
+      "bookedAt": "2026-11-22 16:02",
+      "status": "Completed"
+    },
+    {
+      "bookingId": "BSR-721483",
+      "userId": "D4N8W1Q6Z2",
+      "busNumber": "412-RINGROAD",
+      "busDriver": "Pooja Krishnan",
+      "distanceToBus": "2.6 km",
+      "distanceToStop": "0.9 km",
+      "busStopName": "Metro Terminal West Gate",
+      "eta": "6 mins",
+      "currentRoad": "Kengeri Satellite Link Road",
+      "bookedAt": "2026-11-22 16:18",
+      "status": "Completed"
+    },
+    {
+      "bookingId": "BSR-550391",
+      "userId": "H2T7L9C3Y5",
+      "busNumber": "520-CENTRAL",
+      "busDriver": "Mohammad Tariq",
+      "distanceToBus": "3.1 km",
+      "distanceToStop": "1.4 km",
+      "busStopName": "Victoria Hospital Junction",
+      "eta": "10 mins",
+      "currentRoad": "Grand Central Boulevard",
+      "bookedAt": "2026-11-22 16:22",
+      "status": "Active"
+    }
+  ],
+  "users": [
+    {
+      "userId": "A7X9K2P4Q1",
+      "username": "rohit_sharma",
+      "email": "rohit@example.com",
+      "password": "password123",
+      "createdAt": "2026-11-20"
+    },
+    {
+      "userId": "M3B8T5W1Z9",
+      "username": "priya_nair",
+      "email": "priya@example.com",
+      "password": "password123",
+      "createdAt": "2026-11-21"
+    },
+    {
+      "userId": "K9P2X4M7B1",
+      "username": "david_chen",
+      "email": "david@example.com",
+      "password": "password123",
+      "createdAt": "2026-11-21"
+    },
+    {
+      "userId": "D4N8W1Q6Z2",
+      "username": "ananya_sen",
+      "email": "ananya@example.com",
+      "password": "password123",
+      "createdAt": "2026-11-22"
+    },
+    {
+      "userId": "H2T7L9C3Y5",
+      "username": "marcus_v",
+      "email": "marcus@example.com",
+      "password": "password123",
+      "createdAt": "2026-11-22"
+    }
+  ]
+}

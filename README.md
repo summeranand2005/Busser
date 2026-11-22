@@ -70,6 +70,7 @@ As a startup in urban bus management, operating and coordinating multiple bus ro
     - 🟢 **Green:** Smooth / Clear Flow
     - 🟡 **Amber:** Moderate Traffic
     - 🔴 **Red:** Heavy Traffic / Congestion Chokepoint
+  - **Active Road Corridor Display:** Live corridor badge displaying the exact street (e.g. *Outer Ring Road (Sector 4 Express Corridor)*) the bus is currently navigating.
   - **Lower Screen Floating Dashboard (Approximate Wait Time):**
     - Large live countdown: `Approximate Wait Time: 4 min 28 sec ETA` (ticks down dynamically).
     - Current vehicle speed in `km/h` (adjusts based on whether the bus is in heavy, moderate, or clear traffic segments).
@@ -80,6 +81,40 @@ As a startup in urban bus management, operating and coordinating multiple bus ro
 
 ---
 
+### 6. Tabular External Database (`DATABASE.md` & `database.json`)
+- **Native GitHub Tabular Format:** Maintained in a separate, isolated markdown file (`DATABASE.md`) with clean GFM tables viewable directly on the GitHub website.
+- **Trip Records Schema:** Stores all 8 mandatory transit parameters:
+  1. `Unique User ID`: 10-character alphanumeric ID (e.g. `A7X9K2P4Q1`).
+  2. `Bus Number`: Designated route code (e.g. `101-EXPRESS`, `204-AIRPORT`).
+  3. `Bus Driver`: Assigned captain name (e.g. `Captain Rajesh Sharma`).
+  4. `Distance (User to Bus)`: Geodesic distance in km.
+  5. `Distance (User to Bus Stop)`: Geodesic distance in km to the chosen pickup stop.
+  6. `Picked Bus Stop Name`: Official stop shelter name.
+  7. `Estimated Time of Arrival (ETA)`: Arrival wait calculation.
+  8. `Current Route (Road Name)`: Active street corridor (e.g. `Airport Link Highway (NH-44)`).
+- **In-App Database Inspector:** 1-click database modal allowing the user to view live bookings, inspect registered commuters, copy the markdown table to clipboard, or download an updated `DATABASE.md` directly.
+
+---
+
+### 7. Passenger Authentication & Account Management
+- **Automatic Interception on Booking:** If an unauthenticated user attempts to book a bus, the booking flow seamlessly intercepts and opens the Sign Up modal while preserving their selected bus.
+- **3-Box Sign Up Pop-Up:**
+  - `Username`: Chosen profile handle.
+  - `Email ID`: Verified email address for receipts.
+  - `Password`: Account password.
+  - **"Sign Up" Button:** Generates a unique 10-digit alphanumeric User ID (e.g. `A7X9K2P4Q1`), registers the user in the tabular database, signs the user in, and places them directly back into the bus booking pop-up.
+  - **"Log In" Option:** Navigates directly to the Log In pop-up.
+- **2-Box Log In Pop-Up:**
+  - `Email ID / Username / User ID`: Accepts any of the three identifiers.
+  - `Password`: Account password.
+  - **"Log In" Button:** Validates credentials against the database. If correct, authenticates and returns user to the bus booking modal; if invalid, displays an error asking the user to re-enter their details.
+  - **Quick Test Autofill:** Includes pre-configured demo account credentials for immediate testing.
+- **Top-Right Header Profile Indicator:**
+  - **When NOT Signed In:** Blank outline profile silhouette, displays `ID: GUEST-USER`, and reads `"sign up here"` below. Clicking opens the Sign Up pop-up.
+  - **When SIGNED IN:** Passenger's profile avatar, username next to it, 10-digit alphanumeric User ID chip, and `"signed in"` in small text below. Clicking opens the account/sign-in pop-up.
+
+---
+
 ## 🛠️ Technical Architecture
 
 ```
@@ -87,9 +122,12 @@ Buser Single Page Application (index.html)
 │
 ├── Reactive State Machine (React 18)
 │   ├── appMode: 'MAP_VIEW' | 'BUS_DETAILS_MODAL' | 'STOP_SELECTION' | 'CONFIRMATION_MODAL' | 'LIVE_TRACKING'
+│   ├── authModalMode: null | 'SIGN_UP' | 'LOG_IN'
+│   ├── currentUser (userId: 10-digit alphanumeric, username, email)
+│   ├── usersDb & bookingsDb (localStorage synced + DATABASE.md exporter)
 │   ├── userLocation (GPS coordinates & fallback)
 │   ├── selectedBus & selectedStop
-│   ├── bookingDetails (OTP, timestamps, route)
+│   ├── bookingDetails (OTP, timestamps, active corridor road name)
 │   └── liveTrackingEngine (interpolated coordinates, speed, traffic segment analysis)
 │
 ├── Geospatial Engine (Leaflet 1.9.4 & CartoDB Voyager)
