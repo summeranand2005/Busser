@@ -71,13 +71,21 @@ As a startup in urban bus management, operating and coordinating multiple bus ro
     - 🟡 **Amber:** Moderate Traffic
     - 🔴 **Red:** Heavy Traffic / Congestion Chokepoint
   - **Active Road Corridor Display:** Live corridor badge displaying the exact street (e.g. *Outer Ring Road (Sector 4 Express Corridor)*) the bus is currently navigating.
-  - **Lower Screen Floating Dashboard (Approximate Wait Time):**
-    - Large live countdown: `Approximate Wait Time: 4 min 28 sec ETA` (ticks down dynamically).
-    - Current vehicle speed in `km/h` (adjusts based on whether the bus is in heavy, moderate, or clear traffic segments).
-    - Remaining distance in `km`.
-    - Live trip progress bar from departure to arrival.
-    - Driver quick-call and instant dispatcher chat actions.
-    - Trip cancellation & route reset controls.
+  - **Collapsible & Scrollable Live Tracking Drawer (Full Map Visibility):**
+    - **Swipe / Scroll Down to Collapse:** Swipe down on mobile, scroll down on the drawer, or tap **`▼ Scroll Down / View Map`** to collapse the drawer into a sleek, minimal bottom bar (~68px). Leaves **over 90% of the map completely unobstructed** so passengers can view the entire animated bus route clearly.
+    - **Compact Live Bar Indicators:** Even when collapsed, passengers can continuously track:
+      - Circular bus route badge (e.g. `101`)
+      - Live countdown: `Approximate Wait Time / ETA` (e.g. `2 min 06 sec ETA`)
+      - Live Speed (`31 km/h`) & active road corridor
+      - 1-tap **`▲ Expand Details`** button
+    - **Swipe / Scroll Up to Expand:** Swipe up, scroll up with the mouse wheel, or tap anywhere on the compact bar to restore the full dashboard with driver profile, progress bar, and trip actions.
+    - **Automatic Camera Re-centering:** Automatically re-fits Leaflet map bounds when toggled so the bus and destination are framed in the visible viewport.
+    - **Large Live Countdown:** `Approximate Wait Time: 4 min 28 sec ETA` (ticks down dynamically).
+    - **Current Vehicle Speed:** in `km/h` (adjusts based on whether the bus is in heavy, moderate, or clear traffic segments).
+    - **Remaining Distance:** in `km` to the picked bus stop.
+    - **Live Trip Progress Bar:** from departure to stop arrival.
+    - **Driver Quick Actions:** Instant call and dispatcher chat triggers.
+    - **Trip Controls:** Cancel booking and route reset buttons.
 
 ---
 
