@@ -713,19 +713,24 @@
       // User's Dedicated CARTO API Key
       const USER_CARTO_API_KEY = "cb1_5c98_1_e29b42e3a8d35e9d14a2af29";
 
-      // Map Provider & Custom API Key State: Strictly default to CARTO Voyager with user's key
-      const [tileProvider, setTileProvider] = useState('carto_voyager');
+      // Map Provider & Theme State: Strictly default to CARTO Voyager with user's key
+      const [tileProvider, setTileProvider] = useState(() => {
+        try {
+          return localStorage.getItem('buser_tile_provider') || 'carto_voyager';
+        } catch(e) {
+          return 'carto_voyager';
+        }
+      });
       const [apiKey, setApiKey] = useState(USER_CARTO_API_KEY);
-      const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
-      const [quickKeyInput, setQuickKeyInput] = useState('');
-      const [tempApiKey, setTempApiKey] = useState(USER_CARTO_API_KEY);
-      const [tempProvider, setTempProvider] = useState('carto_voyager');
+      const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
       const tileLayerRef = useRef(null);
 
       // Ensure user's CARTO key and provider are stored and active on mount
       useEffect(() => {
         localStorage.setItem('buser_map_api_key', USER_CARTO_API_KEY);
-        localStorage.setItem('buser_tile_provider', 'carto_voyager');
+        if (!localStorage.getItem('buser_tile_provider')) {
+          localStorage.setItem('buser_tile_provider', 'carto_voyager');
+        }
       }, []);
 
       // Live Tracking Dynamic Simulation State
@@ -1602,36 +1607,131 @@
                 <span className="hidden md:inline">{gpsActive ? 'GPS Locked' : 'Locate Me'}</span>
               </button>
 
-              {/* Map & API Key Button */}
-              <button
-                onClick={() => {
-                  setTempProvider(tileProvider);
-                  setTempApiKey(apiKey);
-                  setIsMapSettingsOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 transition-all shadow-md"
-                title="Configure Map Tiles & API Key"
-              >
-                <span className="text-amber-400">🗺️</span>
-                <span className="hidden sm:inline">Map & API Key</span>
-                {apiKey ? (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" title="API Key Active"></span>
-                ) : (
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1 py-0.2 rounded font-bold">
-                    FREE
-                  </span>
-                )}
-              </button>
+              {/* Map Theme Selector Button (Placed directly to the left of Profile Picture) */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all shadow-md ${
+                    isThemeMenuOpen 
+                      ? 'bg-blue-600 text-white border-blue-400 shadow-blue-500/25' 
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700 hover:border-slate-600'
+                  }`}
+                  title="Choose map style theme"
+                >
+                  <span className="text-amber-400">🗺️</span>
+                  <span className="hidden sm:inline font-bold">Map Theme</span>
+                  <svg className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isThemeMenuOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
 
-              {/* Database Table Button */}
-              <button
-                onClick={() => setIsDatabaseModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 hover:border-blue-500/50 transition-all shadow-md"
-                title="View GitHub-Synced Tabular Transit Database"
-              >
-                <span className="text-blue-400">🗄️</span>
-                <span className="hidden md:inline">Database</span>
-              </button>
+                {/* Theme Selector Dropdown Menu */}
+                {isThemeMenuOpen && (
+                  <>
+                    {/* Click-away backdrop */}
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsThemeMenuOpen(false)}
+                    ></div>
+
+                    <div 
+                      className="absolute right-0 sm:right-0 mt-2 w-64 bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl p-2 z-50 space-y-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="px-2.5 py-1.5 border-b border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        <span>Select Map Theme</span>
+                        <button 
+                          onClick={() => setIsThemeMenuOpen(false)}
+                          className="text-slate-500 hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* 1. CARTO Voyager (Default Transit) */}
+                      <button
+                        onClick={() => {
+                          setTileProvider('carto_voyager');
+                          localStorage.setItem('buser_tile_provider', 'carto_voyager');
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                          tileProvider === 'carto_voyager'
+                            ? 'bg-blue-600/20 text-white border border-blue-500/40 shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-sm shrink-0">
+                            ☀️
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold leading-tight text-white">CARTO Voyager</div>
+                            <div className="text-[10px] text-slate-400">Daylight Transit (Default)</div>
+                          </div>
+                        </div>
+                        {tileProvider === 'carto_voyager' && (
+                          <span className="text-emerald-400 font-black text-sm pr-1">✓</span>
+                        )}
+                      </button>
+
+                      {/* 2. CARTO Dark (Night Transit) */}
+                      <button
+                        onClick={() => {
+                          setTileProvider('carto_dark');
+                          localStorage.setItem('buser_tile_provider', 'carto_dark');
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                          tileProvider === 'carto_dark'
+                            ? 'bg-blue-600/20 text-white border border-blue-500/40 shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-sm shrink-0">
+                            🌙
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold leading-tight text-white">CARTO Dark</div>
+                            <div className="text-[10px] text-slate-400">Dark Mode Transit</div>
+                          </div>
+                        </div>
+                        {tileProvider === 'carto_dark' && (
+                          <span className="text-emerald-400 font-black text-sm pr-1">✓</span>
+                        )}
+                      </button>
+
+                      {/* 3. Esri Navigation */}
+                      <button
+                        onClick={() => {
+                          setTileProvider('esri');
+                          localStorage.setItem('buser_tile_provider', 'esri');
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                          tileProvider === 'esri'
+                            ? 'bg-blue-600/20 text-white border border-blue-500/40 shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-sm shrink-0">
+                            🧭
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold leading-tight text-white">Esri Navigation</div>
+                            <div className="text-[10px] text-slate-400">World Street Navigation</div>
+                          </div>
+                        </div>
+                        {tileProvider === 'esri' && (
+                          <span className="text-emerald-400 font-black text-sm pr-1">✓</span>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Top-Right Profile & Authentication Area */}
               {currentUser ? (
@@ -1752,63 +1852,6 @@
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                     <span>Tap any bus marker to inspect & book</span>
-                  </div>
-                </div>
-
-                {/* Quick Map & API Key Widget */}
-                <div className="bg-slate-950/95 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 shadow-xl max-w-xs space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-200 flex items-center gap-1.5">
-                      <span>🗺️</span>
-                      <span>Map Layer</span>
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      {tileProvider === 'carto_voyager' ? 'CARTO Voyager (Default)' : tileProvider.toUpperCase()}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <input 
-                      type="text"
-                      value={quickKeyInput}
-                      onChange={(e) => setQuickKeyInput(e.target.value)}
-                      placeholder="CARTO Key Active (cb1_5c98...)"
-                      className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
-                    />
-                    <button
-                      onClick={() => {
-                        const k = quickKeyInput.trim() || USER_CARTO_API_KEY;
-                        setApiKey(k);
-                        setTileProvider('carto_voyager');
-                        localStorage.setItem('buser_map_api_key', k);
-                        localStorage.setItem('buser_tile_provider', 'carto_voyager');
-                        setQuickKeyInput('');
-                      }}
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-all shadow"
-                    >
-                      Apply
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-800 text-slate-400">
-                    <button
-                      onClick={() => {
-                        setApiKey(USER_CARTO_API_KEY);
-                        setTileProvider('carto_voyager');
-                        localStorage.setItem('buser_map_api_key', USER_CARTO_API_KEY);
-                        localStorage.setItem('buser_tile_provider', 'carto_voyager');
-                        setQuickKeyInput('');
-                      }}
-                      className="text-emerald-400 hover:text-emerald-300 font-semibold"
-                    >
-                      ✓ Default CARTO
-                    </button>
-                    <button
-                      onClick={() => setIsMapSettingsOpen(true)}
-                      className="text-blue-400 hover:underline"
-                    >
-                      Settings ⚙️
-                    </button>
                   </div>
                 </div>
 
@@ -2413,196 +2456,7 @@
             </>
           )}
 
-          {/* ======================================================== */}
-          {/* MAP PROVIDER & API KEY CONFIGURATION MODAL               */}
-          {/* ======================================================== */}
-          {isMapSettingsOpen && (
-            <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-              <div 
-                className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Modal Header */}
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
-                      🗺️
-                    </div>
-                    <div>
-                      <h3 className="text-base font-extrabold text-white">Map Provider & API Key</h3>
-                      <p className="text-xs text-slate-400">Choose your map style or activate your custom API key</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setIsMapSettingsOpen(false)}
-                    className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
 
-                {/* Map Provider Selection Cards */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                    Select Tile Provider
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    
-                    {/* 1. CARTO Voyager (Default) */}
-                    <div 
-                      onClick={() => setTempProvider('carto_voyager')}
-                      className={`cursor-pointer p-3 rounded-2xl border-2 transition-all ${
-                        tempProvider === 'carto_voyager' 
-                          ? 'bg-blue-600/15 border-blue-500 text-white shadow-lg shadow-blue-500/10' 
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm text-white">CARTO Voyager</span>
-                        <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
-                          Default • Active Key
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">Crisp city transit styling powered by your CARTO API key.</p>
-                    </div>
-
-                    {/* 2. CARTO Dark Matter */}
-                    <div 
-                      onClick={() => setTempProvider('carto_dark')}
-                      className={`cursor-pointer p-3 rounded-2xl border-2 transition-all ${
-                        tempProvider === 'carto_dark' 
-                          ? 'bg-blue-600/15 border-blue-500 text-white shadow-lg shadow-blue-500/10' 
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm text-white">CARTO Dark</span>
-                        <span className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded font-bold">
-                          Active Key
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">Ultra-modern dark transit styling using your CARTO API key.</p>
-                    </div>
-
-                    {/* 3. OpenStreetMap */}
-                    <div 
-                      onClick={() => setTempProvider('osm')}
-                      className={`cursor-pointer p-3 rounded-2xl border-2 transition-all ${
-                        tempProvider === 'osm' 
-                          ? 'bg-blue-600/15 border-blue-500 text-white shadow-lg shadow-blue-500/10' 
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm text-white">OpenStreetMap</span>
-                        <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-bold">
-                          Free Backup
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">Open-source worldwide street map with roads & buildings.</p>
-                    </div>
-
-                    {/* 4. Esri Navigation */}
-                    <div 
-                      onClick={() => setTempProvider('esri')}
-                      className={`cursor-pointer p-3 rounded-2xl border-2 transition-all ${
-                        tempProvider === 'esri' 
-                          ? 'bg-blue-600/15 border-blue-500 text-white shadow-lg shadow-blue-500/10' 
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-sm text-white">Esri Navigation</span>
-                        <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-bold">
-                          Free Backup
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">High contrast worldwide navigation basemap.</p>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* API Key Input Section */}
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <span>🔑</span>
-                      <span>Your API Key / Access Token</span>
-                    </label>
-                    {tempProvider === 'osm' || tempProvider === 'esri' ? (
-                      <span className="text-[11px] text-emerald-400 font-medium">Optional for this provider</span>
-                    ) : (
-                      <span className="text-[11px] text-amber-400 font-medium">Required to remove watermark</span>
-                    )}
-                  </div>
-
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      value={tempApiKey}
-                      onChange={(e) => setTempApiKey(e.target.value)}
-                      placeholder={tempProvider.startsWith('carto') ? "Paste your CARTO API key (e.g. carto_xxx)" : "Paste your Map API key"}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                    {tempApiKey && (
-                      <button
-                        onClick={() => setTempApiKey('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    💡 <b>How it works:</b> CARTO basemaps authenticate by attaching <code className="text-blue-400 bg-slate-950 px-1 py-0.5 rounded">?key=YOUR_API_KEY</code> to every tile request. Your key <code className="text-emerald-400 bg-slate-950 px-1 py-0.5 rounded">cb1_5c98...</code> is now active as the system default.
-                  </p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-800">
-                  <button
-                    onClick={() => {
-                      // Reset to Default CARTO with User's Key
-                      setTempProvider('carto_voyager');
-                      setTempApiKey(USER_CARTO_API_KEY);
-                      setTileProvider('carto_voyager');
-                      setApiKey(USER_CARTO_API_KEY);
-                      localStorage.setItem('buser_tile_provider', 'carto_voyager');
-                      localStorage.setItem('buser_map_api_key', USER_CARTO_API_KEY);
-                      setIsMapSettingsOpen(false);
-                    }}
-                    className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all"
-                  >
-                    Reset to Default CARTO
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTileProvider(tempProvider);
-                      setApiKey(tempApiKey);
-                      localStorage.setItem('buser_tile_provider', tempProvider);
-                      if (tempApiKey.trim()) {
-                        localStorage.setItem('buser_map_api_key', tempApiKey.trim());
-                      } else {
-                        localStorage.removeItem('buser_map_api_key');
-                      }
-                      setIsMapSettingsOpen(false);
-                    }}
-                    className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <span>Save & Apply Map</span>
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-
-              </div>
-            </div>
-          )}
 
           {/* ======================================================== */}
           {/* STEP 4: SIGN UP POP-UP (3 Boxes: Username, Email, Pass) */}
