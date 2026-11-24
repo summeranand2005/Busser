@@ -655,6 +655,23 @@
         }
       });
 
+      // Refresh the shared user directory from the server-side GitHub database.
+      useEffect(() => {
+        let cancelled = false;
+        fetch('/api/users')
+          .then(response => response.ok ? response.json() : Promise.reject(new Error('User database unavailable')))
+          .then(data => {
+            if (!cancelled && Array.isArray(data.users)) {
+              setUsersDb(data.users);
+              localStorage.setItem('buser_users_db', JSON.stringify(data.users));
+            }
+          })
+          .catch(() => {
+            // Keep the bundled/local copy available when running without the Vercel API.
+          });
+        return () => { cancelled = true; };
+      }, []);
+
       const [bookingsDb, setBookingsDb] = useState(() => {
         try {
           const saved = localStorage.getItem('buser_bookings_db');
@@ -1145,7 +1162,7 @@
       // --- Authentication & Database Handlers ---
 
       // A. Handle Sign Up (3 boxes: Username, Email ID, Password)
-      const handleSignUp = (e) => {
+      const handleSignUp = async (e) => {
         if (e) e.preventDefault();
         setAuthError('');
         const username = signUpForm.username.trim();
@@ -1189,12 +1206,32 @@
           role: "Verified Commuter"
         };
 
-        const updatedUsers = [newUser, ...usersDb];
+        let response;
+        let result = {};
+        try {
+          response = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newUser)
+          });
+          // A plain static preview has no API route; keep its signup local-only.
+          if (response.status !== 404) result = await response.json();
+        } catch (error) {
+          setAuthError('Could not reach the registration service. Please try again when the app is online.');
+          return;
+        }
+        if (response.status !== 404 && !response.ok) {
+          setAuthError(result.error || 'Registration could not be saved. Please try again.');
+          return;
+        }
+
+        const savedUser = result.user || newUser;
+        const updatedUsers = [savedUser, ...usersDb.filter(u => u.userId !== savedUser.userId)];
         setUsersDb(updatedUsers);
         localStorage.setItem('buser_users_db', JSON.stringify(updatedUsers));
         
-        setCurrentUser(newUser);
-        localStorage.setItem('buser_current_user', JSON.stringify(newUser));
+        setCurrentUser(savedUser);
+        localStorage.setItem('buser_current_user', JSON.stringify(savedUser));
 
         setSignUpForm({ username: '', email: '', password: '' });
         setAuthModalMode(null);

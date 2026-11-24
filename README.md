@@ -121,6 +121,17 @@ As a startup in urban bus management, operating and coordinating multiple bus ro
   - **When NOT Signed In:** Blank outline profile silhouette, displays `ID: GUEST-USER`, and reads `"sign up here"` below. Clicking opens the Sign Up pop-up.
   - **When SIGNED IN:** Passenger's profile avatar, username next to it, 10-digit alphanumeric User ID chip, and `"signed in"` in small text below. Clicking opens the account/sign-in pop-up.
 
+### Vercel registration storage setup
+
+The Vercel deployment uses the serverless function in `api/users.js` to read and write registered users in `database.json` in the connected GitHub repository. To enable it, add these environment variables in the Vercel project settings, then redeploy:
+
+- `GITHUB_TOKEN`: a GitHub fine-grained token with **Contents: Read and write** access to this repository.
+- `GITHUB_OWNER`: the GitHub account or organization that owns the repository.
+- `GITHUB_REPO`: the repository name.
+- `GITHUB_BRANCH`: the branch containing `database.json` and `DATABASE.md` (optional; defaults to `main`).
+
+The token must only be stored in Vercel environment settings; do not put it in `index.html` or commit it. Successful registration updates `database.json` and the registered users table in `DATABASE.md`. Without these settings, registration displays an error and does not pretend the account was saved. Running the page outside Vercel continues to use the browser's local demo data.
+
 ---
 
 ## 🛠️ Technical Architecture
