@@ -1,6 +1,6 @@
 {
   "tableName": "passenger_bus_bookings",
-  "lastSynced": "2026-11-25T01:32:40.120Z",
+  "lastSynced": "2026-11-25T14:12:49.374Z",
   "records": [
     {
       "bookingId": "BSR-849201",
@@ -69,6 +69,15 @@
     }
   ],
   "users": [
+    {
+      "userId": "QXWEZB9VPI",
+      "username": "Manu",
+      "email": "rohithmk87@gmail.com",
+      "password": "krushnaisgay",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
+      "createdAt": "2026-11-25",
+      "role": "Verified Commuter"
+    },
     {
       "userId": "WU8I5NZHX5",
       "username": "Sudhamshu.rao",
