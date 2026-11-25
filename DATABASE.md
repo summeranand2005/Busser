@@ -21,6 +21,7 @@
 
 | Unique User ID (10-Digit Alphanumeric) | Username | Registered Email | Account Created | Security Role |
 | :--- | :--- | :--- | :--- | :--- |
+| **`V0QLXMVK89`** | `Vidit` | `vid@email.com` | 2026-11-25 | Verified Commuter |
 | **`QXWEZB9VPI`** | `Manu` | `rohithmk87@gmail.com` | 2026-11-25 | Verified Commuter |
 | **`WU8I5NZHX5`** | `Sudhamshu.rao` | `sudhukaranth.2009@gmail.com` | 2026-11-25 | Verified Commuter |
 | **`2D4VVGR1L4`** | `krushna` | `summeranand2005@gmail.com` | 2026-11-24 | Verified Commuter |
