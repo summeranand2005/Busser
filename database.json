@@ -1,6 +1,6 @@
 {
   "tableName": "passenger_bus_bookings",
-  "lastSynced": "2026-11-25T14:12:49.374Z",
+  "lastSynced": "2026-11-25T15:03:18.855Z",
   "records": [
     {
       "bookingId": "BSR-849201",
@@ -69,6 +69,15 @@
     }
   ],
   "users": [
+    {
+      "userId": "V0QLXMVK89",
+      "username": "Vidit",
+      "email": "vid@email.com",
+      "password": "VR1229",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
+      "createdAt": "2026-11-25",
+      "role": "Verified Commuter"
+    },
     {
       "userId": "QXWEZB9VPI",
       "username": "Manu",
