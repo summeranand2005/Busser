@@ -304,25 +304,63 @@
       name: "Current Location (Downtown Hub)"
     };
 
-    // Preset High-Resolution Bus Interior Photos
+    // Bus cabin photos are grouped by fleet vehicle so different buses show different galleries.
     const BUS_INTERIOR_PHOTOS = [
       {
-        url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1000&q=80",
-        caption: "Executive Class Ergonomic Seating & Clean Aisle"
+        url: "https://images.unsplash.com/photo-1690759725480-770a32cf0d42?auto=format&fit=crop&w=1200&q=85",
+        caption: "Passenger seating inside a city bus"
       },
       {
-        url: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1000&q=80",
-        caption: "Smart Ambient Lighting & Dual Climate Control"
+        url: "https://images.unsplash.com/photo-1763343526586-bd9baaecf91f?auto=format&fit=crop&w=1200&q=85",
+        caption: "Daylight through the passenger cabin"
       },
       {
-        url: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1000&q=80",
-        caption: "High-Speed 5G WiFi & Personal USB-C Fast Chargers"
+        url: "https://images.unsplash.com/photo-1747150385185-96af38cde695?auto=format&fit=crop&w=1200&q=85",
+        caption: "View from inside a city bus"
       },
       {
-        url: "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&w=1000&q=80",
-        caption: "Spacious Overhead Stowing & Wheelchair Access"
+        url: "https://images.unsplash.com/photo-1769781942941-03b98edbad0d?auto=format&fit=crop&w=1200&q=85",
+        caption: "Passenger cabin and aisle"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1759473434576-bcf2b4c01916?auto=format&fit=crop&w=1200&q=85",
+        caption: "Seats beside the bus windows"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1775611718566-c5a1d4e256b9?auto=format&fit=crop&w=1200&q=85",
+        caption: "Modern bus seats and overhead lights"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1542731695-c1febcb48504?auto=format&fit=crop&w=1200&q=85",
+        caption: "Classic coach seating and center aisle"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1531270279937-aca3e712ad01?auto=format&fit=crop&w=1200&q=85",
+        caption: "Public transit seats and handrails"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1662074442814-351f09894a05?auto=format&fit=crop&w=1200&q=85",
+        caption: "Blue coach seats inside the bus"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1639363868613-b6fd35df964f?auto=format&fit=crop&w=1200&q=85",
+        caption: "Rows of seats along a bus aisle"
       }
     ];
+
+    const BUS_GALLERY_INDEXES = {
+      "BUS-101": [0, 1, 2, 3],
+      "BUS-204": [1, 2, 3, 4],
+      "BUS-305": [2, 3, 4, 5],
+      "BUS-412": [3, 4, 5, 6],
+      "BUS-520": [4, 5, 6, 7],
+      "BUS-608": [5, 6, 8, 9]
+    };
+
+    function getBusGallery(busId) {
+      const indexes = BUS_GALLERY_INDEXES[busId] || BUS_GALLERY_INDEXES["BUS-101"];
+      return indexes.map(index => BUS_INTERIOR_PHOTOS[index]);
+    }
 
     // Seed mock data for dynamic fleet around any coordinate
     function generateFleetData(centerLat, centerLng) {
@@ -490,7 +528,8 @@
         ...b,
         lat: centerLat + b.latOffset,
         lng: centerLng + b.lngOffset,
-        distanceKm: calculateDistanceKm(centerLat, centerLng, centerLat + b.latOffset, centerLng + b.lngOffset)
+        distanceKm: calculateDistanceKm(centerLat, centerLng, centerLat + b.latOffset, centerLng + b.lngOffset),
+        gallery: getBusGallery(b.id)
       }));
     }
 
@@ -524,47 +563,87 @@
       });
     }
 
-    // Generate road path coordinates with simulated traffic segments between bus and pickup stop
-    function generateTrafficRoute(startLat, startLng, endLat, endLng) {
-      // Create 5 intermediate zig-zag realistic road waypoints
-      const steps = 6;
-      const points = [];
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        // Add slight curvature like city street grid
-        const curve = Math.sin(t * Math.PI) * 0.003;
-        const lat = startLat + (endLat - startLat) * t + (i % 2 === 0 ? curve : -curve * 0.5);
-        const lng = startLng + (endLng - startLng) * t + (i % 2 === 1 ? curve : -curve * 0.5);
-        points.push([lat, lng]);
+    function buildTrafficRoute(points, durationSeconds = null) {
+      const segmentLengths = [];
+      const cumulativeDistances = [0];
+      for (let i = 0; i < points.length - 1; i++) {
+        const length = calculateDistanceKm(points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]);
+        segmentLengths.push(length);
+        cumulativeDistances.push(cumulativeDistances[i] + length);
       }
 
-      // Assign traffic conditions to each segment:
-      // Green = Free Flow, Orange = Moderate, Red = Heavy Traffic
-      const trafficSegments = [];
+      const totalDistanceKm = cumulativeDistances[cumulativeDistances.length - 1] || 0;
       const trafficTypes = ['green', 'green', 'orange', 'red', 'green', 'orange'];
+      const groupCount = Math.min(trafficTypes.length, Math.max(1, points.length - 1));
+      const trafficSegments = [];
 
-      for (let i = 0; i < points.length - 1; i++) {
-        const type = trafficTypes[i % trafficTypes.length];
-        let color = '#10b981'; // Green
-        let label = 'Smooth';
-        if (type === 'orange') {
-          color = '#f59e0b'; // Amber
-          label = 'Moderate';
-        } else if (type === 'red') {
-          color = '#ef4444'; // Red
-          label = 'Heavy Traffic';
-        }
+      for (let group = 0; group < groupCount; group++) {
+        const startIndex = Math.floor(group * (points.length - 1) / groupCount);
+        const endIndex = Math.max(startIndex + 1, Math.floor((group + 1) * (points.length - 1) / groupCount));
+        const type = trafficTypes[group];
+        const style = type === 'red'
+          ? { color: '#ef4444', label: 'Heavy Traffic' }
+          : type === 'orange'
+            ? { color: '#f59e0b', label: 'Moderate' }
+            : { color: '#10b981', label: 'Smooth' };
+
         trafficSegments.push({
-          segmentIndex: i,
-          from: points[i],
-          to: points[i + 1],
-          color: color,
-          type: type,
-          label: label
+          segmentIndex: group,
+          startIndex,
+          endIndex,
+          startProgress: totalDistanceKm ? cumulativeDistances[startIndex] / totalDistanceKm : 0,
+          endProgress: totalDistanceKm ? cumulativeDistances[endIndex] / totalDistanceKm : 1,
+          points: points.slice(startIndex, endIndex + 1),
+          color: style.color,
+          type,
+          label: style.label
         });
       }
 
-      return { points, trafficSegments };
+      return { points, trafficSegments, segmentLengths, cumulativeDistances, totalDistanceKm, durationSeconds };
+    }
+
+    // OSRM returns full road geometry in GeoJSON coordinate order: [longitude, latitude].
+    async function fetchRoadTrafficRoute(startLat, startLng, endLat, endLng) {
+      const coordinates = `${startLng},${startLat};${endLng},${endLat}`;
+      const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson&steps=false`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Routing service returned ${response.status}`);
+        const data = await response.json();
+        const route = data.routes && data.routes[0];
+        const routeCoordinates = route && route.geometry && route.geometry.coordinates;
+        if (data.code !== 'Ok' || !Array.isArray(routeCoordinates) || routeCoordinates.length < 2) {
+          throw new Error('No road route was found for these points.');
+        }
+
+        const points = [
+          [startLat, startLng],
+          ...routeCoordinates.map(([lng, lat]) => [lat, lng]),
+          [endLat, endLng]
+        ];
+        return buildTrafficRoute(points, route.duration);
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    // Fallback for unavailable routing: an approximate curved line, clearly reported in the UI.
+    function generateTrafficRoute(startLat, startLng, endLat, endLng) {
+      const steps = 12;
+      const points = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const curve = Math.sin(t * Math.PI) * 0.002;
+        points.push([
+          startLat + (endLat - startLat) * t + curve,
+          startLng + (endLng - startLng) * t - curve * 0.65
+        ]);
+      }
+      return buildTrafficRoute(points);
     }
 
     // --- Helper: Generate Unique 10-Digit Alphanumeric User ID ---
@@ -812,6 +891,7 @@
       const [estimatedWaitSecs, setEstimatedWaitSecs] = useState(320); // 5 mins 20 secs
       const [currentSpeed, setCurrentSpeed] = useState(34);
       const [trafficCondition, setTrafficCondition] = useState('Moderate Traffic');
+      const [routeNotice, setRouteNotice] = useState('');
       const [isTripCancelled, setIsTripCancelled] = useState(false);
       const [sosTriggered, setSosTriggered] = useState(false);
 
@@ -1475,7 +1555,7 @@
       };
 
       // 7. Live Tracking Simulation Engine
-      const startLiveTracking = () => {
+      const startLiveTracking = async () => {
         if (!selectedBus || !selectedStop || !mapInstanceRef.current) return;
 
         const map = mapInstanceRef.current;
@@ -1484,17 +1564,26 @@
         trafficPolylinesRef.current.forEach(poly => map.removeLayer(poly));
         trafficPolylinesRef.current = [];
 
-        // Generate realistic multi-segment path with traffic colors
-        const routeData = generateTrafficRoute(
-          selectedBus.lat, selectedBus.lng,
-          selectedStop.lat, selectedStop.lng
-        );
+        let routeData;
+        setRouteNotice('');
+        try {
+          routeData = await fetchRoadTrafficRoute(
+            selectedBus.lat, selectedBus.lng,
+            selectedStop.lat, selectedStop.lng
+          );
+        } catch (error) {
+          routeData = generateTrafficRoute(
+            selectedBus.lat, selectedBus.lng,
+            selectedStop.lat, selectedStop.lng
+          );
+          setRouteNotice('Road directions are unavailable. This is an approximate route.');
+        }
         routeDataRef.current = routeData;
 
         // Draw segmented polyline with traffic colors
         routeData.trafficSegments.forEach(seg => {
           // Glow border
-          const glow = L.polyline([seg.from, seg.to], {
+          const glow = L.polyline(seg.points, {
             color: seg.color,
             weight: 8,
             opacity: 0.35,
@@ -1503,7 +1592,7 @@
           }).addTo(map);
 
           // Core line
-          const line = L.polyline([seg.from, seg.to], {
+          const line = L.polyline(seg.points, {
             color: seg.color,
             weight: 5,
             opacity: 0.95,
@@ -1558,6 +1647,10 @@
           progress += 1 / totalSteps;
           if (progress >= 1) {
             progress = 1;
+            const destination = pts[pts.length - 1];
+            setTrackedBusPos(destination);
+            if (trackingMarkerRef.current) trackingMarkerRef.current.setLatLng(destination);
+            setTrackingProgress(1);
             clearInterval(trackingIntervalRef.current);
             setEstimatedWaitSecs(0);
             return;
@@ -1565,10 +1658,17 @@
 
           setTrackingProgress(progress);
 
-          // Calculate current coordinate along multi-segment line
-          const totalSegments = pts.length - 1;
-          const currentSegIndex = Math.min(Math.floor(progress * totalSegments), totalSegments - 1);
-          const segProgress = (progress * totalSegments) - currentSegIndex;
+          // Move by route distance so the marker follows the complete road geometry smoothly.
+          const targetDistance = routeData.totalDistanceKm * progress;
+          let currentSegIndex = 0;
+          while (
+            currentSegIndex < routeData.segmentLengths.length - 1 &&
+            routeData.cumulativeDistances[currentSegIndex + 1] < targetDistance
+          ) currentSegIndex++;
+          const segmentDistance = routeData.segmentLengths[currentSegIndex] || 1;
+          const segProgress = Math.min(1, Math.max(0,
+            (targetDistance - routeData.cumulativeDistances[currentSegIndex]) / segmentDistance
+          ));
 
           const p1 = pts[currentSegIndex];
           const p2 = pts[currentSegIndex + 1];
@@ -1582,7 +1682,8 @@
           }
 
           // Update speed & traffic conditions based on which segment we are on
-          const currentSeg = routeData.trafficSegments[currentSegIndex];
+          const currentSeg = routeData.trafficSegments.find(seg => progress <= seg.endProgress) ||
+            routeData.trafficSegments[routeData.trafficSegments.length - 1];
           if (currentSeg) {
             if (currentSeg.type === 'red') {
               setTrafficCondition('Heavy Traffic (Congestion Ahead)');
@@ -1639,6 +1740,10 @@
           mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], 14, { animate: true });
         }
       };
+
+      const currentBusPhotos = selectedBus && Array.isArray(selectedBus.gallery) && selectedBus.gallery.length
+        ? selectedBus.gallery
+        : getBusGallery(selectedBus?.id);
 
       return (
         <div className="app-shell relative w-full overflow-hidden bg-slate-950">
@@ -2002,24 +2107,24 @@
                         Bus Interior Gallery
                       </h3>
                       <span className="text-xs text-slate-400 font-medium">
-                        {currentPhotoIndex + 1} of {BUS_INTERIOR_PHOTOS.length}
+                        {currentPhotoIndex + 1} of {currentBusPhotos.length}
                       </span>
                     </div>
 
                     <div className="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video border border-slate-800 group shadow-inner">
                       <img 
-                        src={BUS_INTERIOR_PHOTOS[currentPhotoIndex].url} 
-                        alt="Inside the bus" 
+                        src={currentBusPhotos[currentPhotoIndex].url}
+                        alt={currentBusPhotos[currentPhotoIndex].caption}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       
                       {/* Photo Caption Overlay */}
                       <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent flex items-center justify-between">
                         <span className="text-xs font-medium text-slate-200">
-                          {BUS_INTERIOR_PHOTOS[currentPhotoIndex].caption}
+                          {currentBusPhotos[currentPhotoIndex].caption}
                         </span>
                         <div className="flex gap-1.5">
-                          {BUS_INTERIOR_PHOTOS.map((_, idx) => (
+                          {currentBusPhotos.map((_, idx) => (
                             <span 
                               key={idx}
                               onClick={() => setCurrentPhotoIndex(idx)}
@@ -2033,13 +2138,13 @@
 
                       {/* Carousel Arrow Controls */}
                       <button 
-                        onClick={() => setCurrentPhotoIndex((prev) => (prev > 0 ? prev - 1 : BUS_INTERIOR_PHOTOS.length - 1))}
+                        onClick={() => setCurrentPhotoIndex((prev) => (prev > 0 ? prev - 1 : currentBusPhotos.length - 1))}
                         className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity"
                       >
                         ‹
                       </button>
                       <button 
-                        onClick={() => setCurrentPhotoIndex((prev) => (prev < BUS_INTERIOR_PHOTOS.length - 1 ? prev + 1 : 0))}
+                        onClick={() => setCurrentPhotoIndex((prev) => (prev < currentBusPhotos.length - 1 ? prev + 1 : 0))}
                         className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity"
                       >
                         ›
@@ -2048,7 +2153,7 @@
 
                     {/* Thumbnail Strip */}
                     <div className="grid grid-cols-4 gap-2 pt-1">
-                      {BUS_INTERIOR_PHOTOS.map((photo, i) => (
+                      {currentBusPhotos.map((photo, i) => (
                         <div 
                           key={i}
                           onClick={() => setCurrentPhotoIndex(i)}
@@ -2320,6 +2425,14 @@
                     </div>
                   </div>
                 </div>
+                <div className="text-[9px] text-slate-400 text-right px-2 pt-1.5">
+                  Road geometry © OpenStreetMap contributors via OSRM. Bus movement and traffic colors are simulated.
+                </div>
+                {routeNotice && (
+                  <div className="mt-1 bg-amber-950/90 border border-amber-500/40 text-amber-200 text-xs px-3 py-2 rounded-xl shadow-lg" role="status">
+                    {routeNotice}
+                  </div>
+                )}
               </div>
 
               {/* LOWER PART OF THE SCREEN: Collapsible & Scrollable Live Tracking Drawer */}
