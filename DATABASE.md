@@ -21,6 +21,7 @@
 
 | Unique User ID (10-Digit Alphanumeric) | Username | Registered Email | Account Created | Security Role |
 | :--- | :--- | :--- | :--- | :--- |
+| **`P6UWRUYC9B`** | `Sanath K S` | `sanathkumar5638@gmail.com` | 2026-11-27 | Verified Commuter |
 | **`2VIQQSMF58`** | `Kyle butler` | `butler1208@gmail.com` | 2026-11-25 | Verified Commuter |
 | **`V0QLXMVK89`** | `Vidit` | `vid@email.com` | 2026-11-25 | Verified Commuter |
 | **`QXWEZB9VPI`** | `Manu` | `rohithmk87@gmail.com` | 2026-11-25 | Verified Commuter |
